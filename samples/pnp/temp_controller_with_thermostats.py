@@ -8,6 +8,9 @@ import asyncio
 import random
 import math
 import logging
+import uuid
+
+
 
 from azure.iot.device.aio import IoTHubDeviceClient
 from azure.iot.device.aio import ProvisioningDeviceClient
@@ -46,8 +49,9 @@ THERMOSTAT_2 = None
 
 JSON_DATA = []
 BLOB_INFO = None
-STORE_BLOB = True
+STORE_BLOB = False
 SLEEP_TIME = 1
+DEVICE_ID= "deviceid1"
 
 class Thermostat(object):
     def __init__(self, name, moving_win=10):
@@ -384,6 +388,7 @@ async def main():
     async def send_telemetry():
         global STORE_BLOB
         global SLEEP_TIME
+        global DEVICE_ID
         print("Sending telemetry from various components")
 
         while True:
@@ -394,22 +399,21 @@ async def main():
             THERMOSTAT_1.record(curr_temp_ext)
 
             
-            temperature_msg1 = {"temperature": curr_temp_ext, "humidity" : curr_humidity_ext, "send_datetime": datetime.now().isoformat()}
+            uu1 = str(uuid.uuid4())
+            uu2 = str(uuid.uuid4())
+            uu3 = str(uuid.uuid4())
+            temperature_msg1 = {"id":uu1, "deviceid": DEVICE_ID, "temperature": curr_temp_ext, "humidity" : curr_humidity_ext, "send_datetime": datetime.now().isoformat()}
             await send_telemetry_from_temp_controller(
-                device_client, temperature_msg1, thermostat_1_component_name, sleeptime=SLEEP_TIME, store_blob=STORE_BLOB
-            )
-
-            curr_temp_int = create_error_data(random.uniform(10, 50))  # Current temperature in Celsius
+                device_client, temperature_msg1, thermostat_1_component_name, sleeptime=SLEEP_TIME, store_blob=STORE_BLOB            )
+            curr_temp_int = create_error_data(random.uniform(10, 50))  
+            # Current temperature in Celsius 
             curr_humidity_int = create_error_data(random.uniform(50, 70))
             THERMOSTAT_2.record(curr_temp_int)
-
-            temperature_msg2 = {"temperature": curr_temp_int, "humidity" : curr_humidity_int, "send_datetime": datetime.now().isoformat()}
-
+            temperature_msg2 = {"id":uu2, "deviceid": DEVICE_ID, "temperature": curr_temp_int, "humidity" : curr_humidity_int, "send_datetime": datetime.now().isoformat()}
             await send_telemetry_from_temp_controller(
-                device_client, temperature_msg2, thermostat_2_component_name, sleeptime=SLEEP_TIME, store_blob=STORE_BLOB
-            )
-
-            workingset_msg3 = {"workingSet": random.randrange(1, 100), "send_datetime": datetime.now().isoformat()}
+                device_client, temperature_msg2, thermostat_2_component_name, sleeptime=SLEEP_TIME, store_blob=STORE_BLOB            )
+            workingset_msg3 = {"id":uu3, "deviceid": DEVICE_ID, "workingSet": random.randrange(1, 100), "send_datetime": datetime.now().isoformat()}
+ 
             await send_telemetry_from_temp_controller(device_client, workingset_msg3, sleeptime=SLEEP_TIME, store_blob=STORE_BLOB)
             await device_client.disconnect()
 
